@@ -1,35 +1,35 @@
 .data
 filename:     .asciiz "cupom_fiscal.txt"  # Define o nome do arquivo a ser criado e escrito
 
-# Mensagens fixas que ser„o escritas no arquivo (strings)
+# Mensagens fixas que ser√£o escritas no arquivo (strings)
 msg1:         .asciiz " ------ CUPOM FISCAL ------\n"
-msg2:         .asciiz "CombustÌvel:\n"           # Aqui dever· ser escrito o tipo de combustÌvel
-msg3:         .asciiz " Quantidade:"            # Aqui dever· ser escrito a quantidade de litros
-msg4:         .asciiz " litros\n"
-msg5:         .asciiz " PreÁo por litro: R$ \n" # Aqui dever· ser escrito o preÁo por litro
-msg6:         .asciiz "Total a pagar: R$ \n"    # Aqui dever· ser escrito o total a pagar
-msg7:         .asciiz "------------------------\n        Volte Sempre!\n"
+msg2:         .asciiz "\nCombust√≠vel:"           # Aqui dever√° ser escrito o tipo de combust√≠vel
+msg3:         .asciiz "\nQuantidade:"            # Aqui dever√° ser escrito a quantidade de litros
+msg4:         .asciiz " litros"
+msg5:         .asciiz "\nPre√ßo por litro: R$ " # Aqui dever√° ser escrito o pre√ßo por litro
+msg6:         .asciiz "\nTotal a pagar: R$ \n"    # Aqui dever√° ser escrito o total a pagar
+msg7:         .asciiz "\n---------------------------\n        Volte Sempre!"
 
 .text
 .globl main
 
 main:
     # Abrir arquivo para escrita
-    li $v0, 13            # syscall 13 È usada para abrir/criar arquivo
-    la $a0, filename      # endereÁo da string com o nome do arquivo (argumento)
+    li $v0, 13            # syscall 13 √© usada para abrir/criar arquivo
+    la $a0, filename      # endere√ßo da string com o nome do arquivo (argumento)
     li $a1, 1             # flag = 1 para abrir arquivo para escrita
-    li $a2, 0             # modo padr„o (n„o È usado neste caso)
+    li $a2, 0             # modo padr√£o (n√£o √© usado neste caso)
     syscall               # executa a chamada do sistema
     move $s0, $v0         # salva o descritor do arquivo retornado em $s0 para usar depois
 
-    # Escrever o cabeÁalho do cupom
+    # Escrever o cabe√ßalho do cupom
     li $v0, 15            # syscall 15 escreve no arquivo
     move $a0, $s0         # primeiro argumento: descritor do arquivo (onde escrever)
-    la $a1, msg1          # segundo argumento: endereÁo da string a escrever
-    li $a2, 29            # terceiro argumento: n˙mero de caracteres a escrever
+    la $a1, msg1          # segundo argumento: endere√ßo da string a escrever
+    li $a2, 29            # terceiro argumento: n√∫mero de caracteres a escrever
     syscall               # executa a escrita
 
-    # Escrever "CombustÌvel:\n"
+    # Escrever "Combust√≠vel:\n"
     li $v0, 15
     move $a0, $s0
     la $a1, msg2
@@ -50,7 +50,7 @@ main:
     li $a2, 8
     syscall
 
-    # Escrever " PreÁo por litro: R$ \n"
+    # Escrever " Pre√ßo por litro: R$ \n"
     li $v0, 15
     move $a0, $s0
     la $a1, msg5
@@ -64,7 +64,7 @@ main:
     li $a2, 22
     syscall
 
-    # Escrever o rodapÈ do cupom 
+    # Escrever o rodap√© do cupom 
     li $v0, 15
     move $a0, $s0
     la $a1, msg7
@@ -78,6 +78,6 @@ main:
     syscall
 
     # Encerrar o programa 
-    li $v0, 10            # syscall 10 termina a execuÁ„o do programa
+    li $v0, 10            # syscall 10 termina a execu√ß√£o do programa
     syscall
 
