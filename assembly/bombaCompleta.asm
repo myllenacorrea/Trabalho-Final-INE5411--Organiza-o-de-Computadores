@@ -5,8 +5,9 @@
     preco_alcool:     .word 0
     preco_padrao:     .word 5
 
-    # Buffers de entrada
+    # Buffers de entrada e conversão
     buffer_input:     .space 2
+    buffer_str:       .space 16
 
     # Menus e mensagens gerais
     principal:        .asciiz "\nMENU PRINCIPAL\n1 - Funcionario\n2 - Cliente\n0 - Sair\n"
@@ -33,20 +34,19 @@
     str_concluido:      .asciiz "\n\n--- ABASTECIMENTO CONCLUIDO ---\n"
 
     # Cupom fiscal
-    cupom_nome:       .asciiz "meu_cupom_fiscal.txt"
-    cupom_cabecalho:   .asciiz "============== CUPOM FISCAL ==============\n"
-    cupom_combustivel: .asciiz "\nTipo de Combustivel:"
-    cupom_tipo_comum:  .asciiz " Gasolina Comum\n"
-    cupom_tipo_aditiv: .asciiz " Gasolina Aditivada\n"
-    cupom_tipo_alcool: .asciiz " Alcool\n"
-    cupom_litros:      .asciiz "\nLitros Abastecidos (L): "
-    cupom_valor:       .asciiz "Total: R$"
-    cupom_rodape:      .asciiz "\n========= OBRIGADO! VOLTE SEMPRE =========\n"
-    newline:           .asciiz "\n"
+    cupom_nome:         .asciiz "meu_cupom_fiscal.txt"
+    cupom_cabecalho:    .asciiz "============== CUPOM FISCAL ==============\n"
+    cupom_combustivel:  .asciiz "\nTipo de Combustivel:"
+    cupom_tipo_comum:   .asciiz " Gasolina Comum\n"
+    cupom_tipo_aditiv:  .asciiz " Gasolina Aditivada\n"
+    cupom_tipo_alcool:  .asciiz " Alcool\n"
+    cupom_litros:       .asciiz "\nLitros Abastecidos (L): "
+    cupom_valor:        .asciiz "Total: R$"
+    cupom_rodape:       .asciiz "\n========= OBRIGADO! VOLTE SEMPRE =========\n"
+    newline:            .asciiz "\n"
 
 .text
 main:
-    # Inicializa precos com preco_padrao
     la $t1, preco_comum
     la $t2, preco_aditivada
     la $t3, preco_alcool
@@ -152,17 +152,17 @@ menu_cliente:
 
 cliente_comum:
     lw $s0, preco_comum
-    li $s3, 1       # Salvar tipo de combustível (1 = comum)
+    li $s3, 1
     j escolher_modo
-    
+
 cliente_aditivada:
     lw $s0, preco_aditivada
-    li $s3, 2       # Salvar tipo de combustível (2 = aditivada)
+    li $s3, 2
     j escolher_modo
-    
+
 cliente_alcool:
     lw $s0, preco_alcool
-    li $s3, 3       # Salvar tipo de combustível (3 = álcool)
+    li $s3, 3
     j escolher_modo
 
 escolher_modo:
@@ -202,93 +202,81 @@ simular:
     li $v0, 4
     la $a0, str_iniciando
     syscall
-    
     li $v0, 4
     la $a0, str_total_abastecer
     syscall
-    
     li $v0, 1
     move $a0, $s1
     syscall
-    
     li $v0, 4
     la $a0, str_L
     syscall
-    
     li $v0, 4
     la $a0, str_valor_total
     syscall
-    
     li $v0, 1
     move $a0, $s2
     syscall
-    
     li $v0, 4
     la $a0, str_linha
     syscall
 
-    li $t7, 0          # Contador iniciado em 0
-    
+    li $t7, 0
+
 loop_abastecimento:
     bge $t7, $s1, fim_simulacao
-    
-    # Pausa de 1 segundo
     li $v0, 32
     li $a0, 1000
     syscall
-    
-    # Mostrar progresso
     li $v0, 4
     la $a0, str_abastecendo
     syscall
-    
     li $v0, 1
-    addi $a0, $t7, 1    # Mostrar litro atual (contador+1)
+    addi $a0, $t7, 1
     syscall
-    
     li $v0, 4
     la $a0, str_L_final
     syscall
-    
-    addi $t7, $t7, 1    # Incrementar contador
+    addi $t7, $t7, 1
     j loop_abastecimento
 
 fim_simulacao:
     jal gerar_cupom
-    
+    j pos_cupom
+
+pos_cupom:
     li $v0, 4
     la $a0, str_concluido
     syscall
     j menu_principal
 
 gerar_cupom:
-    # Abrir arquivo para escrita
+    addi $sp, $sp, -4
+    sw $ra, 0($sp)
+
     li $v0, 13
     la $a0, cupom_nome
     li $a1, 1
     li $a2, 0
     syscall
     move $s7, $v0
-    
-    # Escrever cabeçalho
+
     li $v0, 15
     move $a0, $s7
     la $a1, cupom_cabecalho
     li $a2, 44
     syscall
-    
-    # Escrever tipo de combustível
+
     li $v0, 15
     move $a0, $s7
     la $a1, cupom_combustivel
     li $a2, 21
     syscall
-    
-    # Determinar qual tipo de combustível foi usado
+
     beq $s3, 1, escrever_comum
     beq $s3, 2, escrever_aditivada
     beq $s3, 3, escrever_alcool
-    
+
 escrever_comum:
     li $v0, 15
     move $a0, $s7
@@ -296,7 +284,7 @@ escrever_comum:
     li $a2, 16
     syscall
     j continuar_cupom
-    
+
 escrever_aditivada:
     li $v0, 15
     move $a0, $s7
@@ -304,7 +292,7 @@ escrever_aditivada:
     li $a2, 19
     syscall
     j continuar_cupom
-    
+
 escrever_alcool:
     li $v0, 15
     move $a0, $s7
@@ -313,70 +301,62 @@ escrever_alcool:
     syscall
 
 continuar_cupom:
-    # Escrever litros
     li $v0, 15
     move $a0, $s7
     la $a1, cupom_litros
     li $a2, 25
     syscall
-    
-    # Converter litros para string e escrever
-    addi $sp, $sp, -16
+
     move $a0, $s1
-    move $a1, $sp
+    la $a1, buffer_str
     jal int_to_string
-    
+
     li $v0, 15
     move $a0, $s7
-    move $a1, $sp
+    la $a1, buffer_str
     move $a2, $v1
     syscall
-    
-    # Nova linha
+
     li $v0, 15
     move $a0, $s7
     la $a1, newline
     li $a2, 1
     syscall
-    
-    # Escrever valor
+
     li $v0, 15
     move $a0, $s7
     la $a1, cupom_valor
     li $a2, 9
     syscall
-    
-    # Converter valor para string e escrever
+
     move $a0, $s2
-    move $a1, $sp
+    la $a1, buffer_str
     jal int_to_string
-    
+
     li $v0, 15
     move $a0, $s7
-    move $a1, $sp
+    la $a1, buffer_str
     move $a2, $v1
     syscall
-    
-    # Nova linha
+
     li $v0, 15
     move $a0, $s7
     la $a1, newline
     li $a2, 1
     syscall
-    
-    # Escrever rodapé
+
     li $v0, 15
     move $a0, $s7
     la $a1, cupom_rodape
     li $a2, 46
     syscall
-    
-    # Fechar arquivo
+
     li $v0, 16
     move $a0, $s7
     syscall
-    
-    addi $sp, $sp, 16
+
+    lw $ra, 0($sp)
+    addi $sp, $sp, 4
     jr $ra
 
 int_to_string:
@@ -384,14 +364,13 @@ int_to_string:
     move $t9, $a1
     li $t0, 10
     li $t1, 0
-    
-    # Caso especial para zero
+
     bnez $t8, itos_loop
     li $t2, '0'
     sb $t2, 0($t9)
     li $v1, 1
     jr $ra
-    
+
 itos_loop:
     beqz $t8, itos_reverse
     divu $t8, $t0
@@ -402,12 +381,12 @@ itos_loop:
     addi $t9, $t9, 1
     addi $t1, $t1, 1
     j itos_loop
-    
+
 itos_reverse:
     move $v1, $t1
     sub $t9, $t9, 1
     move $t3, $a1
-    
+
 reverse_loop:
     bge $t3, $t9, itos_done
     lb $t4, 0($t3)
@@ -417,7 +396,7 @@ reverse_loop:
     addi $t3, $t3, 1
     subi $t9, $t9, 1
     j reverse_loop
-    
+
 itos_done:
     jr $ra
 
@@ -430,3 +409,4 @@ invalido:
 fim:
     li $v0, 10
     syscall
+
